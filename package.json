@@ -1,0 +1,59 @@
+{
+  "name": "no-ssrf",
+  "version": "1.0.0",
+  "description": "Stop user-supplied URLs from reaching your server's own network. Zero dependencies, runs anywhere; DNS-rebinding-safe requests for Node.",
+  "license": "MIT",
+  "author": "Qaweem Ahmad",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/qaweem321/no-ssrf.git"
+  },
+  "homepage": "https://qaweem321.github.io/no-ssrf/",
+  "keywords": [
+    "ssrf",
+    "security",
+    "webhook",
+    "url",
+    "ip",
+    "ipv6",
+    "dns-rebinding",
+    "private-ip",
+    "edge"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "engines": {
+    "node": ">=20"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./node": {
+      "types": "./dist/node.d.ts",
+      "default": "./dist/node.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "prepare": "tsc -p tsconfig.build.json",
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "playground:dev": "vite playground",
+    "playground:build": "vite build playground",
+    "check": "npm run typecheck && npm test && npm run build && npm run playground:build",
+    "playground:preview": "vite preview playground --port 4320 --strictPort"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.0",
+    "typescript": "7.0.2",
+    "vite": "8.3.1",
+    "vitest": "5.0.2"
+  }
+}

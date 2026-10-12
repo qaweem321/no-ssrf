@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Paste a URL and see whether common SSRF filters catch it. 37 tricky URLs, from [::ffff:169.254.169.254] to 0177.0.0.1."
+    />
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <title>no-ssrf: can your SSRF filter catch these?</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <main class="page">
+      <header>
+        <h1>no-ssrf <span class="muted">· can your SSRF filter catch these?</span></h1>
+        <p class="lead">
+          Your server fetches a URL a user typed: a webhook, a link preview, an image import. These
+          are the URLs that turn that feature into a way into your own network. Paste one, or read
+          the gallery below.
+        </p>
+      </header>
+
+      <section class="tester" aria-label="Test a URL">
+        <label for="url">URL to test</label>
+        <input
+          id="url"
+          type="text"
+          spellcheck="false"
+          autocomplete="off"
+          value="https://[::ffff:169.254.169.254]/latest/meta-data/"
+        />
+        <div id="result" aria-live="polite"></div>
+      </section>
+
+      <section aria-label="Gallery">
+        <h2>The gallery</h2>
+        <p id="score" class="muted"></p>
+        <div class="table-scroll">
+          <table id="gallery">
+            <thead>
+              <tr>
+                <th>URL (click one to test it)</th>
+                <th>Should be</th>
+                <th id="naive-0"></th>
+                <th id="naive-1"></th>
+                <th>no-ssrf</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="usage" aria-label="Use it">
+        <h2>Use it</h2>
+        <pre><code>import { checkUrl } from "no-ssrf";          // anywhere: Node, Bun, Deno, edge, browser
+import { safeRequest } from "no-ssrf/node";  // Node: checks every DNS answer and redirect
+
+const verdict = checkUrl(userUrl);
+if (!verdict.ok) return { error: verdict.reason };
+
+const res = await safeRequest(verdict.url, { method: "POST", body, timeoutMs: 5000 });</code></pre>
+        <p class="muted">
+          Checking the URL is half the job: a domain can resolve to a private address, or switch to
+          one between your check and the request. <code>safeRequest</code> checks the address it
+          actually connects to.
+          <a href="https://github.com/qaweem321/no-ssrf">Source, docs and tests on GitHub</a>.
+        </p>
+      </section>
+    </main>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>
