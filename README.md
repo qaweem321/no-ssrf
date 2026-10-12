@@ -25,7 +25,7 @@ public address when you check and a private one when you connect.
 ## Install
 
 ```bash
-npm install github:qaweem321/no-ssrf
+npm install @qaweem321/no-ssrf
 ```
 
 ## Use
