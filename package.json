@@ -48,7 +48,8 @@
     "playground:dev": "vite playground",
     "playground:build": "vite build playground",
     "check": "npm run typecheck && npm test && npm run build && npm run playground:build",
-    "playground:preview": "vite preview playground --port 4320 --strictPort"
+    "playground:preview": "vite preview playground --port 4320 --strictPort",
+    "prepublishOnly": "npm run check"
   },
   "devDependencies": {
     "@types/node": "24.19.0",

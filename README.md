@@ -6,7 +6,7 @@ makes the request with the address checked at connect time, so DNS rebinding doe
 
 **[▶ Try the playground: can your SSRF filter catch these?](https://qaweem321.github.io/no-ssrf/)**
 
-![Two common filters get 11/37 and 18/37 of the gallery right; no-ssrf gets 37/37](docs/playground.jpg)
+![Two common filters get 11/37 and 18/37 of the gallery right; no-ssrf gets 37/37](https://raw.githubusercontent.com/qaweem321/no-ssrf/main/docs/playground.jpg)
 
 ## Why
 
@@ -25,7 +25,7 @@ public address when you check and a private one when you connect.
 ## Install
 
 ```bash
-npm install github:qaweem321/no-ssrf
+npm install no-ssrf
 ```
 
 ## Use
