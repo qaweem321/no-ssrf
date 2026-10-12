@@ -1,4 +1,4 @@
-// no-ssrf/node: make the request safely. Checking a URL first and fetching it second isn't enough:
+// @qaweem321/no-ssrf/node: make the request safely. Checking a URL first and fetching it second isn't enough:
 // a domain can answer DNS with a public address for the check and a private one for the request
 // (DNS rebinding). Here the address is checked inside the connection's own DNS lookup, so the
 // address checked is the address connected to.

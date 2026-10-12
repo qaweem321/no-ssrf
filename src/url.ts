@@ -21,7 +21,7 @@ const BLOCKED_NAMES = [/^localhost$/, /\.localhost$/, /\.local$/, /\.internal$/,
 
 // Checks a URL a user typed, *after* `new URL()` has rewritten it (the form the request really
 // uses). A name that passes still has to be checked again when it's resolved: see
-// `no-ssrf/node` (`safeRequest`, `safeLookup`) or check DNS answers with `checkAddress`.
+// `@qaweem321/no-ssrf/node` (`safeRequest`, `safeLookup`) or check DNS answers with `checkAddress`.
 export function checkUrl(input: string | URL, options: UrlOptions = {}): UrlVerdict {
   const text = String(input).trim();
   if (text.length > (options.maxLength ?? 2048)) return { ok: false, reason: "URL is too long" };

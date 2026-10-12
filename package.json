@@ -1,5 +1,5 @@
 {
-  "name": "no-ssrf",
+  "name": "@qaweem321/no-ssrf",
   "version": "1.0.0",
   "description": "Stop user-supplied URLs from reaching your server's own network. Zero dependencies, runs anywhere; DNS-rebinding-safe requests for Node.",
   "license": "MIT",

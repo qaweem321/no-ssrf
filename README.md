@@ -1,7 +1,7 @@
 # no-ssrf
 
 **Stop user-supplied URLs from reaching your server's own network.** Zero dependencies. The URL
-and address checks run anywhere (Node, Bun, Deno, edge runtimes, browsers), and `no-ssrf/node`
+and address checks run anywhere (Node, Bun, Deno, edge runtimes, browsers), and `@qaweem321/no-ssrf/node`
 makes the request with the address checked at connect time, so DNS rebinding doesn't get through.
 
 **[▶ Try the playground: can your SSRF filter catch these?](https://qaweem321.github.io/no-ssrf/)**
@@ -31,8 +31,8 @@ npm install github:qaweem321/no-ssrf
 ## Use
 
 ```ts
-import { checkUrl } from "no-ssrf";
-import { safeRequest } from "no-ssrf/node";
+import { checkUrl } from "@qaweem321/no-ssrf";
+import { safeRequest } from "@qaweem321/no-ssrf/node";
 
 // 1. When the user saves the URL: give a clear message.
 const verdict = checkUrl(input, { allowedPorts: [443] });
@@ -58,7 +58,7 @@ Use the checked DNS lookup with anything built on Node's `http`, `https` or `net
 
 ```ts
 import https from "node:https";
-import { safeLookup } from "no-ssrf/node";
+import { safeLookup } from "@qaweem321/no-ssrf/node";
 
 const agent = new https.Agent({ lookup: safeLookup() });
 ```
@@ -66,7 +66,7 @@ const agent = new https.Agent({ lookup: safeLookup() });
 ### Checking addresses yourself
 
 ```ts
-import { checkAddress, isPrivateAddress } from "no-ssrf";
+import { checkAddress, isPrivateAddress } from "@qaweem321/no-ssrf";
 
 isPrivateAddress("::ffff:7f00:1");   // true: 127.0.0.1 as IPv4-mapped IPv6
 checkAddress("64:ff9b::a9fe:a9fe");
@@ -87,7 +87,7 @@ checkAddress("64:ff9b::a9fe:a9fe");
   `metadata.google.internal`), `*.home.arpa`, single-label names, with any case or a trailing dot.
 - **URLs**: anything but `https:` (or `http:` with `allowHttp`), credentials in the URL, ports
   outside `allowedPorts`.
-- **Requests** (`no-ssrf/node`): every address a name resolves to; redirects aren't followed unless
+- **Requests** (`@qaweem321/no-ssrf/node`): every address a name resolves to; redirects aren't followed unless
   you set `maxRedirects`, and then each hop is checked again. Timeouts and a response size limit
   are on by default.
 
@@ -98,7 +98,7 @@ checkAddress("64:ff9b::a9fe:a9fe");
 | `allowHttp` | `false` | Also allow `http://` |
 | `allowedPorts` | any | e.g. `[443]` for webhooks |
 | `allowHosts` | none | Hostnames or IPs that are always allowed (a service you trust) |
-| `allowAddresses` | none | (`no-ssrf/node`) resolved addresses that are always allowed |
+| `allowAddresses` | none | (`@qaweem321/no-ssrf/node`) resolved addresses that are always allowed |
 | `maxRedirects` | `0` | Redirects to follow, each one re-checked |
 | `timeoutMs` | `10000` | Whole request |
 | `maxResponseBytes` | `1000000` | The rest of the body isn't downloaded |

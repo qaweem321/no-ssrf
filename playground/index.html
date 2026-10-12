@@ -55,8 +55,8 @@
 
       <section class="usage" aria-label="Use it">
         <h2>Use it</h2>
-        <pre><code>import { checkUrl } from "no-ssrf";          // anywhere: Node, Bun, Deno, edge, browser
-import { safeRequest } from "no-ssrf/node";  // Node: checks every DNS answer and redirect
+        <pre><code>import { checkUrl } from "@qaweem321/no-ssrf";        // anywhere: Node, Bun, Deno, edge, browser
+import { safeRequest } from "@qaweem321/no-ssrf/node";  // Node: checks every DNS answer and redirect
 
 const verdict = checkUrl(userUrl);
 if (!verdict.ok) return { error: verdict.reason };
