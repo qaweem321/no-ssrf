@@ -136,6 +136,11 @@ npm run check   # type check, tests, build, playground build
 Node ignores a custom lookup, so don't use it for URLs users typed. Proxies configured through
 environment variables bypass the lookup check; send these requests without one.
 
+## Maintenance
+
+no-ssrf is small, has no dependencies, and is maintained in my spare time. Security reports come
+first; other issues and pull requests are welcome, but replies may take a while.
+
 ## License
 
 MIT
