@@ -86,6 +86,20 @@ describe("range matching agrees with node:net BlockList", () => {
 });
 
 describe("checkAddress", () => {
+  test("local-use NAT64, the 2024 documentation range and the old 6to4 relay range are blocked", () => {
+    for (const ip of ["64:ff9b:1::808:808", "64:ff9b:1:ffff::1", "3fff::1", "3fff:fff::1", "192.88.99.1"]) {
+      expect(isPrivateAddress(ip), ip).toBe(true);
+    }
+    expect(isPrivateAddress("4000::1")).toBe(false);
+  });
+
+  test("the exported lists can't be changed to weaken the checks", () => {
+    expect(() => (IPV4_BLOCKED as unknown as unknown[]).pop()).toThrow(TypeError);
+    expect(() => ((IPV4_BLOCKED[3] as { prefix: number }).prefix = 32)).toThrow(TypeError);
+    expect(() => (IPV6_BLOCKED[1].network[15] = 2)).toThrow(TypeError);
+    expect(isPrivateAddress("127.0.0.2")).toBe(true);
+  });
+
   test("IPv4 inside IPv6 is checked as IPv4", () => {
     for (const ip of ["::ffff:127.0.0.1", "::ffff:7f00:1", "::ffff:a9fe:a9fe", "64:ff9b::a9fe:a9fe", "2002:a00:1::", "::7f00:1"]) {
       expect(isPrivateAddress(ip), ip).toBe(true);

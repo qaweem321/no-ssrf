@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, test } from "vitest";
 import { gallery, naiveFilters } from "../playground/gallery.js";
 import { checkUrl } from "../src/index.js";
@@ -5,6 +6,13 @@ import { checkUrl } from "../src/index.js";
 describe("the gallery", () => {
   test.each(gallery)("$url", ({ url, block }) => {
     expect(checkUrl(url).ok).toBe(!block);
+  });
+
+  test("the README and the playground page give the gallery's real size", () => {
+    const readme = readFileSync(new URL("../README.md", import.meta.url), "utf8");
+    const page = readFileSync(new URL("../playground/index.html", import.meta.url), "utf8");
+    expect(readme).toContain(`${gallery.length} URLs (the playground's list)`);
+    expect(page).toContain(`${gallery.length} tricky URLs`);
   });
 
   test("the naive filters really miss some of it (what the playground shows)", () => {
@@ -30,6 +38,12 @@ describe("options", () => {
   test("allowHosts lets a trusted internal service through", () => {
     expect(checkUrl("https://10.0.0.5/", { allowHosts: ["10.0.0.5"] }).ok).toBe(true);
     expect(checkUrl("https://10.0.0.6/", { allowHosts: ["10.0.0.5"] }).ok).toBe(false);
+  });
+
+  test("any number of trailing dots names the same host", () => {
+    for (const url of ["https://localhost./", "https://localhost../", "https://metadata.google.internal.../"]) {
+      expect(checkUrl(url).ok, url).toBe(false);
+    }
   });
 
   test("bad input", () => {

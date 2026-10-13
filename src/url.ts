@@ -43,8 +43,8 @@ export function checkUrl(input: string | URL, options: UrlOptions = {}): UrlVerd
     return { ok: false, reason: `port ${port} is not allowed` };
   }
 
-  // A trailing dot ("localhost.") names the same host.
-  const hostname = url.hostname.toLowerCase().replace(/\.$/, "");
+  // Trailing dots ("localhost.", "localhost..") name the same host.
+  const hostname = url.hostname.toLowerCase().replace(/\.+$/, "");
   if (options.allowHosts?.some((h) => h.toLowerCase() === hostname)) {
     return { ok: true, url, hostname, isIp: parseIp(hostname) !== null };
   }

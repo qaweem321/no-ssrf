@@ -1,4 +1,4 @@
-import { Agent, createServer, get, type Server } from "node:http";
+import { Agent, createServer, get, globalAgent, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import { SsrfError, safeLookup, safeRequest } from "../src/node.js";
@@ -24,6 +24,21 @@ beforeAll(async () => {
       return res.end("x".repeat(5000));
     }
     if (req.url === "/slow") return; // never answers
+    if (req.url === "/drip") {
+      // Never idle, never done: one byte every 100 ms.
+      res.writeHead(200);
+      const timer = setInterval(() => res.write("x"), 100);
+      return res.on("close", () => clearInterval(timer));
+    }
+    if (req.url === "/redirect-elsewhere") {
+      res.writeHead(302, { location: `http://elsewhere.example:${(server.address() as AddressInfo).port}/auth` });
+      return res.end();
+    }
+    if (req.url === "/redirect-here") {
+      res.writeHead(302, { location: "/auth" });
+      return res.end();
+    }
+    if (req.url === "/auth") return res.end(`${req.headers.authorization ?? "none"} ${req.headers.cookie ?? "none"}`);
     res.writeHead(200, { "content-type": "text/plain" });
     res.end(`${req.method} ${req.url}`);
   });
@@ -100,6 +115,52 @@ describe("safeRequest", () => {
     const res = await safeRequest(`${base}/big`, { allowHttp: true, allowAddresses: ["127.0.0.1"], maxResponseBytes: 100 });
     expect(res.truncated).toBe(true);
     expect(res.body.length).toBe(100);
+  });
+
+  test("a server that keeps sending a byte at a time still times out", async () => {
+    const started = Date.now();
+    await expect(
+      safeRequest(`${base}/drip`, { allowHttp: true, allowAddresses: ["127.0.0.1"], timeoutMs: 300 }),
+    ).rejects.toThrow(/Timed out/);
+    expect(Date.now() - started).toBeLessThan(1500);
+  });
+
+  test("credentials don't follow a redirect to another origin", async () => {
+    const options = {
+      allowHttp: true,
+      allowAddresses: ["127.0.0.1"],
+      lookup: fakeDns("127.0.0.1"),
+      maxRedirects: 1,
+      headers: { Authorization: "Bearer SECRET", cookie: "session=1", "x-other": "kept" },
+    };
+    const away = await safeRequest(`${base}/redirect-elsewhere`, options);
+    expect(new TextDecoder().decode(away.body)).toBe("none none");
+    const same = await safeRequest(`${base}/redirect-here`, options);
+    expect(new TextDecoder().decode(same.body)).toBe("Bearer SECRET session=1");
+  });
+
+  test("a keep-alive connection pooled by other code doesn't skip the DNS check", async () => {
+    const port = (server.address() as AddressInfo).port;
+    // Other code in the app talks to the same host:port and leaves the connection open.
+    await new Promise<void>((resolve, reject) => {
+      get(
+        { host: "pooled.example", port, path: "/", agent: globalAgent, lookup: fakeDns("127.0.0.1") },
+        (res) => res.resume().on("end", resolve),
+      ).on("error", reject);
+    });
+    await expect(
+      safeRequest(`http://pooled.example:${port}/secret`, { allowHttp: true, lookup: fakeDns("127.0.0.1") }),
+    ).rejects.toThrow(SsrfError);
+  });
+
+  test("a host in allowHosts may resolve to a private address", async () => {
+    const port = (server.address() as AddressInfo).port;
+    const res = await safeRequest(`http://Internal.Example.:${port}/x`, {
+      allowHttp: true,
+      allowHosts: ["internal.example"],
+      lookup: fakeDns("127.0.0.1"),
+    });
+    expect(res.status).toBe(200);
   });
 
   test("slow endpoints time out", async () => {

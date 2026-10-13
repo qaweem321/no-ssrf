@@ -63,6 +63,11 @@ import { safeLookup } from "@qaweem321/no-ssrf/node";
 const agent = new https.Agent({ lookup: safeLookup() });
 ```
 
+The lookup only runs for host names. Node connects to an IP typed into the URL (`http://127.0.0.1/`)
+without asking DNS, so also run `checkUrl` on every URL before sending it, redirects included.
+And keep this agent for user-supplied URLs only: a connection pooled by another agent never runs
+the lookup.
+
 ### Checking addresses yourself
 
 ```ts
@@ -77,19 +82,23 @@ checkAddress("64:ff9b::a9fe:a9fe");
 
 - **IPv4**: `0.0.0.0/8`, private ranges (`10/8`, `172.16/12`, `192.168/16`), loopback, link-local
   and the metadata service, carrier-grade NAT (`100.64/10`, used by Alibaba Cloud's metadata
-  service), documentation, benchmarking, multicast, reserved and broadcast.
+  service), documentation, benchmarking, the old 6to4 relay range, multicast, reserved and
+  broadcast.
 - **IPv6**: unspecified, loopback, unique local (`fc00::/7`, including AWS's IPv6 metadata
-  address), link-local, site-local, multicast, documentation, discard, Teredo.
-- **IPv4 hidden inside IPv6**: IPv4-mapped (`::ffff:…`), NAT64 (`64:ff9b::/96`,
-  `64:ff9b:1::/48`) and 6to4 (`2002::/16`) are checked as the IPv4 address they carry, so NAT64
-  to a *public* address is allowed. The deprecated IPv4-compatible form (`::…`) is refused.
+  address), link-local, site-local, multicast, documentation (`2001:db8::/32`, `3fff::/20`),
+  discard, Teredo, local-use NAT64 (`64:ff9b:1::/48`).
+- **IPv4 hidden inside IPv6**: IPv4-mapped (`::ffff:…`), NAT64 (`64:ff9b::/96`) and 6to4
+  (`2002::/16`) are checked as the IPv4 address they carry, so NAT64 to a *public* address is
+  allowed. The deprecated IPv4-compatible form (`::…`) is refused.
 - **Names**: `localhost`, `*.localhost`, `*.local`, `*.internal` (e.g.
   `metadata.google.internal`), `*.home.arpa`, single-label names, with any case or a trailing dot.
 - **URLs**: anything but `https:` (or `http:` with `allowHttp`), credentials in the URL, ports
   outside `allowedPorts`.
 - **Requests** (`@qaweem321/no-ssrf/node`): every address a name resolves to; redirects aren't followed unless
-  you set `maxRedirects`, and then each hop is checked again. Timeouts and a response size limit
-  are on by default.
+  you set `maxRedirects`, and then each hop is checked again (and `Authorization` and `Cookie`
+  headers are dropped when a redirect leaves the original origin). Every request opens its own
+  connection, so a pooled one can't skip the check. A timeout for the whole request and a response
+  size limit are on by default.
 
 ### Options
 
@@ -97,10 +106,10 @@ checkAddress("64:ff9b::a9fe:a9fe");
 | --- | --- | --- |
 | `allowHttp` | `false` | Also allow `http://` |
 | `allowedPorts` | any | e.g. `[443]` for webhooks |
-| `allowHosts` | none | Hostnames or IPs that are always allowed (a service you trust) |
+| `allowHosts` | none | Hostnames or IPs that are always allowed (a service you trust); with `safeRequest`, a listed name may also resolve to a private address |
 | `allowAddresses` | none | (`@qaweem321/no-ssrf/node`) resolved addresses that are always allowed |
 | `maxRedirects` | `0` | Redirects to follow, each one re-checked |
-| `timeoutMs` | `10000` | Whole request |
+| `timeoutMs` | `10000` | Whole request, redirects included |
 | `maxResponseBytes` | `1000000` | The rest of the body isn't downloaded |
 
 ## How it's tested

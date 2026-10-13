@@ -14,7 +14,12 @@ const v6 = (network: string, prefix: number, reason: string): Range => ({
   reason,
 });
 
-export const IPV4_BLOCKED: readonly Range[] = [
+// Frozen all the way down: the lists are exported, and a caller changing an entry at runtime
+// would weaken every check.
+const freeze = (ranges: Range[]): readonly Range[] =>
+  Object.freeze(ranges.map((r) => Object.freeze({ ...r, network: Object.freeze(r.network) as Bytes })));
+
+export const IPV4_BLOCKED = freeze([
   v4("0.0.0.0", 8, "\"this network\" (0.0.0.0 reaches the server itself on many systems)"),
   v4("10.0.0.0", 8, "private network"),
   v4("100.64.0.0", 10, "carrier-grade NAT (shared address space)"),
@@ -23,32 +28,34 @@ export const IPV4_BLOCKED: readonly Range[] = [
   v4("172.16.0.0", 12, "private network"),
   v4("192.0.0.0", 24, "IETF protocol assignments"),
   v4("192.0.2.0", 24, "documentation range"),
+  v4("192.88.99.0", 24, "former 6to4 relay anycast (deprecated)"),
   v4("192.168.0.0", 16, "private network"),
   v4("198.18.0.0", 15, "benchmarking range"),
   v4("198.51.100.0", 24, "documentation range"),
   v4("203.0.113.0", 24, "documentation range"),
   v4("224.0.0.0", 4, "multicast"),
   v4("240.0.0.0", 4, "reserved (includes broadcast 255.255.255.255)"),
-];
+]);
 
-export const IPV6_BLOCKED: readonly Range[] = [
+export const IPV6_BLOCKED = freeze([
   v6("::", 128, "unspecified address"),
   v6("::1", 128, "loopback (the server itself)"),
+  v6("64:ff9b:1::", 48, "local-use NAT64 (translates to your own network's IPv4 addresses)"),
   v6("100::", 64, "discard-only range"),
   v6("2001::", 32, "Teredo tunnel (hides an IPv4 address)"),
   v6("2001:db8::", 32, "documentation range"),
+  v6("3fff::", 20, "documentation range"),
   v6("fc00::", 7, "unique local (private network)"),
   v6("fe80::", 10, "link-local"),
   v6("fec0::", 10, "site-local (deprecated private range)"),
   v6("ff00::", 8, "multicast"),
-];
+]);
 
 // IPv6 forms that carry an IPv4 address inside: it's checked as that IPv4 address.
 const EMBEDDED_V4: readonly { network: Bytes; prefix: number; at: number; form: string }[] = [
   { network: parseIPv6("::ffff:0:0") as Bytes, prefix: 96, at: 12, form: "IPv4-mapped IPv6" },
   { network: parseIPv6("::") as Bytes, prefix: 96, at: 12, form: "IPv4-compatible IPv6" },
   { network: parseIPv6("64:ff9b::") as Bytes, prefix: 96, at: 12, form: "NAT64" },
-  { network: parseIPv6("64:ff9b:1::") as Bytes, prefix: 48, at: 12, form: "local NAT64" },
   { network: parseIPv6("2002::") as Bytes, prefix: 16, at: 2, form: "6to4" },
 ];
 
@@ -62,7 +69,8 @@ function checkIPv4(bytes: Bytes) {
 }
 
 // Is this IP address safe to connect to? Handles IPv4 wrapped in IPv6 (::ffff:7f00:1 is
-// 127.0.0.1), NAT64, 6to4 and the old IPv4-compatible form.
+// 127.0.0.1), NAT64, 6to4 and the old IPv4-compatible form. Local-use NAT64 (64:ff9b:1::/48)
+// is refused outright: its networks may put the IPv4 address at several positions.
 export function checkAddress(address: string): AddressVerdict {
   const ip = parseIp(address);
   if (!ip) return { allowed: false, address, version: null, reason: "not an IP address" };
