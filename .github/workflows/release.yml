@@ -1,6 +1,7 @@
 name: Release
 
-# Publishes to npm when a version tag (v1.2.3) is pushed. No npm token or passkey: npm trusts
+# Publishes to npm when a version tag (v1.2.3) is pushed, then creates the GitHub Release with
+# the commit messages since the previous tag as its notes. No npm token or passkey: npm trusts
 # this workflow through trusted publishing (OIDC), set up once in the package's npm settings
 # (publisher: GitHub Actions, repository qaweem321/no-ssrf, workflow release.yml).
 #
@@ -10,13 +11,15 @@ on:
   push:
     tags: ["v*"]
 
-permissions:
-  contents: read
-  id-token: write # lets npm verify this run and publish with provenance
+# Nothing by default; each job asks only for what it needs.
+permissions: {}
 
 jobs:
   publish:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # lets npm verify this run and publish with provenance
     steps:
       - uses: actions/checkout@v7.0.1
       - uses: actions/setup-node@v7.0.0
@@ -34,3 +37,29 @@ jobs:
       - run: npm ci
       # prepublishOnly runs the full check (types, tests, build, playground) first.
       - run: npm publish --access public
+
+  # Separate job so the write permission never meets npm install scripts: it only reads git.
+  github-release:
+    needs: publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          fetch-depth: 0
+      - name: Create the release with the changes since the previous version
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          previous=$(git describe --tags --abbrev=0 "$GITHUB_REF_NAME^" 2>/dev/null || true)
+          range=${previous:+$previous..}$GITHUB_REF_NAME
+          {
+            echo "## Changes"
+            git log --no-merges --format='- %s' "$range"
+            if [ -n "$previous" ]; then
+              echo
+              echo "Full diff: https://github.com/$GITHUB_REPOSITORY/compare/$previous...$GITHUB_REF_NAME"
+            fi
+          } > notes.md
+          gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --notes-file notes.md

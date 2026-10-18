@@ -138,6 +138,8 @@ environment variables bypass the lookup check; send these requests without one.
 
 ## Maintenance
 
+What changed in each version: [Releases](https://github.com/qaweem321/no-ssrf/releases).
+
 no-ssrf is small, has no dependencies, and is maintained in my spare time. Security reports come
 first; other issues and pull requests are welcome, but replies may take a while.
 
