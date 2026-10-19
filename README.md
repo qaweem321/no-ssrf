@@ -125,7 +125,7 @@ checkAddress("64:ff9b::a9fe:a9fe");
 - **Runtimes**: CI runs the tests on Node 20, 22 and 24, and the built package under Bun and Deno.
 
 ```bash
-npm install
+npm ci
 npm run check   # type check, tests, build, playground build
 ```
 
