@@ -29,26 +29,25 @@
           type="text"
           spellcheck="false"
           autocomplete="off"
-          value="https://[::ffff:169.254.169.254]/latest/meta-data/"
+          value="<!--slot:default-url-->"
         />
-        <div id="result" aria-live="polite"></div>
+        <div id="result" aria-live="polite"><!--slot:tester--></div>
       </section>
 
       <section aria-label="Gallery">
         <h2>The gallery</h2>
-        <p id="score" class="muted"></p>
+        <p id="score" class="muted"><!--slot:score--></p>
         <div class="table-scroll">
           <table id="gallery">
             <thead>
               <tr>
                 <th>URL (click one to test it)</th>
                 <th>Should be</th>
-                <th id="naive-0"></th>
-                <th id="naive-1"></th>
+                <!--slot:gallery-head-->
                 <th>no-ssrf</th>
               </tr>
             </thead>
-            <tbody></tbody>
+            <tbody><!--slot:gallery-rows--></tbody>
           </table>
         </div>
       </section>
